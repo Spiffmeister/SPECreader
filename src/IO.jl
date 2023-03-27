@@ -17,12 +17,8 @@ function choose_geometry(geom)
     end
 end
 
-function readh5(Data,field)
-    if size(Data[field]) == (1,)
-        return read(Data,field)[1]
-    else
-        return read(Data,field)
-    end
+function readh5_single(Data,field)
+    return read(Data,field)[1]
 end
 
 
@@ -34,35 +30,35 @@ function read_spec(fname)
     Outputs = fid["output"]
 
     # SPECequilibrium data struct
-    Igeometry = choose_geometry(readh5(Inputs,"Igeometry")[1])
+    Igeometry = choose_geometry(readh5_single(Inputs,"Igeometry"))
     # read(Inputs,"Istellsym")
     # read(Inputs,"Lfreebound")
-    Nvol = readh5(Inputs,"Nvol")
+    Nvol = readh5_single(Inputs,"Nvol")
     # read(Inputs,"Nfp")
     # read(Inputs,"Mpol")
     # read(Inputs,"Ntor")
     Lrad = read(Inputs,"Lrad") #Should always be a vector
-    Mvol = readh5(Outputs,"Mvol")
-    mn = readh5(Outputs,"mn")
+    Mvol = readh5_single(Outputs,"Mvol")
+    mn = readh5_single(Outputs,"mn")
 
     # Volume data struct
     Igeometry != Cartesian ? ICoordinateSingularity = false : ICoordinateSingularity = false
-    
+
     Vol = Coordinates{Float64,Igeometry,Nvol}(
-        readh5(Outputs,"Rbc"),
-        readh5(Outputs,"Rbs"),
-        readh5(Outputs,"Zbc"),
-        readh5(Outputs,"Zbs"),
+        read(Outputs,"Rbc"),
+        read(Outputs,"Rbs"),
+        read(Outputs,"Zbc"),
+        read(Outputs,"Zbs"),
         ICoordinateSingularity,
-        readh5(Outputs,"im"),
-        readh5(Outputs,"in")
+        convert.(Float64,read(Outputs,"im")),
+        convert.(Float64,read(Outputs,"in"))
     )
 
 
-    Ate = readh5(fid["vector_potential"],"Ate")
-    Aze = readh5(fid["vector_potential"],"Aze")
-    Ato = readh5(fid["vector_potential"],"Ato")
-    Azo = readh5(fid["vector_potential"],"Azo")
+    Ate = read(fid["vector_potential"],"Ate")
+    Aze = read(fid["vector_potential"],"Aze")
+    Ato = read(fid["vector_potential"],"Ato")
+    Azo = read(fid["vector_potential"],"Azo")
 
     SubVecs :: Array{VectorPotential} = []
     for ivol = 1:Mvol
@@ -82,10 +78,10 @@ function read_spec(fname)
     
     SE = SPECequilibrium(
         Igeometry, 
-            convert(Bool,readh5(Inputs,"Istellsym")), convert(Bool,readh5(Inputs,"Lfreebound")), 
-            readh5(Inputs,"Nvol"), 
-            readh5(Inputs,"Nfp"), readh5(Inputs,"Mpol"), readh5(Inputs,"Ntor"), 
-            Lrad, readh5(Outputs,"Mvol"), mn,
+            convert(Bool,readh5_single(Inputs,"Istellsym")), convert(Bool,readh5_single(Inputs,"Lfreebound")), 
+            readh5_single(Inputs,"Nvol"), 
+            readh5_single(Inputs,"Nfp"), readh5_single(Inputs,"Mpol"), readh5_single(Inputs,"Ntor"), 
+            Lrad, readh5_single(Outputs,"Mvol"), mn,
         SubVecs,
         Vol
     )

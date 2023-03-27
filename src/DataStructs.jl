@@ -57,6 +57,7 @@ Storage for metric computation
 mutable struct Metrics{T}
     Jac     :: T
     ∇Jac    :: AbstractArray{T}
+    JacMat  :: AbstractArray{T}
 
     gᵢⱼ     :: AbstractArray{T}
     dgᵢⱼ    :: AbstractArray{T}
@@ -65,15 +66,20 @@ mutable struct Metrics{T}
     Rᵢⱼ     :: AbstractArray{T}
     Zᵢⱼ     :: AbstractArray{T}
 
-    function Metrics()
+    function Metrics(T)
 
-        
+        Jac     = T(0) 
+        ∇Jac    = zeros(T,(3,3))
+        JacMat  = zeros(T,(3,3))
+        gᵢⱼ     = zeros(T,(3,3))
+        dgᵢⱼ    = zeros(T,(3,3))
+        R₀₀     = T(0)
+        Rᵢⱼ     = zeros(T,(3,4))
+        Zᵢⱼ     = zeros(T,(3,4))
 
-        new{T}(
-            T(0),zeros(T,(3,3)),
-            zeros(T,(3,3)),zeros(T,(3,3)),
-            T(0),zeros(T(3,3)),zeros(T,(3,3))
-            )
+        new{T}(Jac, ∇Jac, JacMat,
+            gᵢⱼ, dgᵢⱼ,
+            R₀₀, Rᵢⱼ, Zᵢⱼ)
     end
 end
 
@@ -90,6 +96,7 @@ struct Coordinates{T,G,V}
     CoordinateSingularity   :: Bool
     mᵢ                      :: AbstractArray{T}
     nᵢ                      :: AbstractArray{T}
+
 end
 
 """
@@ -100,6 +107,7 @@ struct SPECequilibrium{G,V}
     Params  :: Parameters
     A       :: Vector{VectorPotential}
     Ri      :: Coordinates
+    M       :: Metrics
 
     function SPECequilibrium(Igeometry::GeometryType,StellSym::Bool,Freebound::Bool,
         Nvol::N,Nfp::N,Mpol::N,Ntor::N,Lrad::AbstractArray{N},
@@ -111,15 +119,13 @@ struct SPECequilibrium{G,V}
         Nvol::N,Nfp::N,Mpol::N,Ntor::N,Lrad::AbstractArray{N},
         Mvol::N,mn::N)
 
-        Met :: Vector{Metrics} = []
-        for i = 1:Nvol
-            push!(Met,Metrics())
-        end
+        Met = Metrics(typeof(A[1].Ate[1]))
 
         new{Igeometry,Nvol}(
             Params,
             A,
-            Vol)
+            Vol,
+            Met)
     end
 end
 
