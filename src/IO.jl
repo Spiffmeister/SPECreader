@@ -48,7 +48,7 @@ function read_spec(fname)
     # Volume data struct
     Igeometry != Cartesian ? ICoordinateSingularity = false : ICoordinateSingularity = false
     
-    Vol = Geom{Float64,Igeometry,Nvol}(
+    Vol = Coordinates{Float64,Igeometry,Nvol}(
         readh5(Outputs,"Rbc"),
         readh5(Outputs,"Rbs"),
         readh5(Outputs,"Zbc"),
@@ -74,7 +74,9 @@ function read_spec(fname)
             Ato[Ll:Lu,1:mn],
             Azo[Ll:Lu,1:mn],
             Lrad[ivol],
-            (ivol == 1) & (Igeometry != Cartesian) ? true : false)
+            Igeometry,
+            convert(typeof(Lrad[ivol]),ivol)
+        )
         push!(SubVecs,Vec)
     end
     

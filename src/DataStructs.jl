@@ -8,11 +8,26 @@ const Cylindrical = GeometryType{:CylindricalGeometry}()
 const Toroidal = GeometryType{:ToroidalGeometry}()
 
 
+struct Parameters
+    # Input-list physics
+    Istellaratorsymmetry    :: Bool
+    Lfreebound              :: Bool
+    Nvol                    :: Integer
+    Nfp                     :: Integer
+    Mpol                    :: Integer
+    Ntor                    :: Integer
+    Lrad                    :: AbstractArray{Integer}
+    # Output-list
+    Mvol                    :: Integer
+    mn                      :: Integer
+end
+
 
 """
     VectorPotential
+{T<:Real,N<:Integer,NV<:Volume Number}
 """
-struct VectorPotential{T,N}
+struct VectorPotential{T,N,NV}
 
     Ate         :: AbstractArray{T}
     Ato         :: AbstractArray{T}
@@ -21,29 +36,52 @@ struct VectorPotential{T,N}
 
     Lrad        :: N
 
-    isingular   :: Bool # Singularity present (inner most volume)
+    Isingular   :: Bool # Singularity present (inner most volume)
+
+    function VectorPotential(Ate::AbstractArray{T},Ato::AbstractArray{T},Aze::AbstractArray{T},Azo::AbstractArray{T},
+            Lrad::N,Geom::GeometryType,VolId::N) where {T,N}
+        new{T,N,VolId}(
+            Ate,Ato,Aze,Azo,
+            Lrad,
+            (VolId == 1) & (Geom != Cartesian) ? true : false
+        )
+    end
 end
 
 """
-    Metric
+    Metrics{T}
+{T<:Real}
 
-Holds Jacobian
+Storage for metric computation
 """
-struct Metric{T}
+mutable struct Metrics{T}
     Jac     :: T
-    x       :: AbstractArray{T}
     ∇Jac    :: AbstractArray{T}
+
     gᵢⱼ     :: AbstractArray{T}
     dgᵢⱼ    :: AbstractArray{T}
 
+    R₀₀     :: T
     Rᵢⱼ     :: AbstractArray{T}
     Zᵢⱼ     :: AbstractArray{T}
+
+    function Metrics()
+
+        
+
+        new{T}(
+            T(0),zeros(T,(3,3)),
+            zeros(T,(3,3)),zeros(T,(3,3)),
+            T(0),zeros(T(3,3)),zeros(T,(3,3))
+            )
+    end
 end
 
 """
-    Volume
+    Coordinates{T,G,V}
+{T<:Real,G<:GeometryType,V<:Num of vols}
 """
-struct Geom{T,G,V}
+struct Coordinates{T,G,V}
     Rbc     :: AbstractArray{T}
     Rbs     :: AbstractArray{T}
     Zbc     :: AbstractArray{T}
@@ -56,36 +94,30 @@ end
 
 """
     SPECequilibrium
-T <: Type, V <: Number of volumes
+{T<:Type,V<:Num of vols}
 """
 struct SPECequilibrium{G,V}
-    # Input-list physics
-    Igeometry               :: GeometryType
-    Istellaratorsymmetry    :: Bool
-    Lfreebound              :: Bool
-    Nvol                    :: Integer
-    Nfp                     :: Integer
-    Mpol                    :: Integer
-    Ntor                    :: Integer
-    Lrad                    :: AbstractArray{Integer}
-    # Output-list
-    Mvol                    :: Integer
-    mn                      :: Integer
-
-    A                       :: Vector{VectorPotential}
-    Ri                      :: Geom
+    Params  :: Parameters
+    A       :: Vector{VectorPotential}
+    Ri      :: Coordinates
 
     function SPECequilibrium(Igeometry::GeometryType,StellSym::Bool,Freebound::Bool,
         Nvol::N,Nfp::N,Mpol::N,Ntor::N,Lrad::AbstractArray{N},
         Mvol::N,mn::N,
         A::Vector{VectorPotential},
-        Vol::Geom) where {N}
+        Vol::Coordinates) where {N}
 
+        Params = Parameters(StellSym::Bool,Freebound::Bool,
+        Nvol::N,Nfp::N,Mpol::N,Ntor::N,Lrad::AbstractArray{N},
+        Mvol::N,mn::N)
 
-        new{Igeometry,Nvol}(Igeometry,
-            StellSym,Freebound,
-            Nvol,Nfp,Mpol,Ntor,Lrad,
-            Mvol,mn,
+        Met :: Vector{Metrics} = []
+        for i = 1:Nvol
+            push!(Met,Metrics())
+        end
+
+        new{Igeometry,Nvol}(
+            Params,
             A,
             Vol)
     end
@@ -94,6 +126,11 @@ end
 
 GetType(SE::SPECequilibrium{G,V}) where {G,V} = G
 
+function GetVolId end
+GetVol(A::VectorPotential{T,N,V}) where {T,N,V} = V
+GetVol(SE::SPECequilibrium{G,V}) where {G,V} = V
 
 
-Base.show(io::IO, SE::SPECequilibrium) = print(io,GetType(SE)," SPEC equilibrium read with ",SE.Nvol," volumes.")
+
+
+Base.show(io::IO, SE::SPECequilibrium) = print(io,GetType(SE)," SPEC equilibrium read with ",GetVol(SE)," volumes.")
