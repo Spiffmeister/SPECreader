@@ -1,16 +1,20 @@
 
 """
     Geometry
+Cartesian, Cylindrical or Toroidal
 """
 struct GeometryType{G} end
 const Cartesian = GeometryType{:CartesianGeometry}()
 const Cylindrical = GeometryType{:CylindricalGeometry}()
 const Toroidal = GeometryType{:ToroidalGeometry}()
 
-
+"""
+    Parameters
+Stores simulation output parameters
+"""
 struct Parameters
     # Input-list physics
-    Istellaratorsymmetry    :: Bool
+    StellaratorSymmetry    :: Bool
     Lfreebound              :: Bool
     Nvol                    :: Integer
     Nfp                     :: Integer
@@ -25,7 +29,7 @@ end
 
 """
     VectorPotential
-{T<:Real,N<:Integer,NV<:Volume Number}
+Stores the data needed to construct the vector potential in a given volume
 """
 struct VectorPotential{T,N,NV}
 
@@ -49,12 +53,12 @@ struct VectorPotential{T,N,NV}
 end
 
 """
-    Metrics{T}
-{T<:Real}
-
+    Metrics
 Storage for metric computation
 """
 mutable struct Metrics{T}
+    x       :: AbstractArray{T}
+
     Jac     :: T
     ∇Jac    :: AbstractArray{T}
     JacMat  :: AbstractArray{T}
@@ -67,25 +71,26 @@ mutable struct Metrics{T}
     Zᵢⱼ     :: AbstractArray{T}
 
     function Metrics(T)
-
+        x       = zeros(T,3)
         Jac     = T(0) 
         ∇Jac    = zeros(T,(3,3))
         JacMat  = zeros(T,(3,3))
         gᵢⱼ     = zeros(T,(3,3))
-        dgᵢⱼ    = zeros(T,(3,3))
+        dgᵢⱼ    = zeros(T,(3,3,3))
         R₀₀     = T(0)
-        Rᵢⱼ     = zeros(T,(3,4))
-        Zᵢⱼ     = zeros(T,(3,4))
+        Rᵢⱼ     = zeros(T,(4,3))
+        Zᵢⱼ     = zeros(T,(4,3))
 
-        new{T}(Jac, ∇Jac, JacMat,
+        new{T}(x,
+            Jac, ∇Jac, JacMat,
             gᵢⱼ, dgᵢⱼ,
             R₀₀, Rᵢⱼ, Zᵢⱼ)
     end
 end
 
 """
-    Coordinates{T,G,V}
-{T<:Real,G<:GeometryType,V<:Num of vols}
+    Coordinates
+Data for constructing coordinates
 """
 struct Coordinates{T,G,V}
     Rbc     :: AbstractArray{T}
@@ -101,7 +106,7 @@ end
 
 """
     SPECequilibrium
-{T<:Type,V<:Num of vols}
+SPEC equilibrium hdf5 data
 """
 struct SPECequilibrium{G,V}
     Params  :: Parameters
@@ -129,10 +134,15 @@ struct SPECequilibrium{G,V}
     end
 end
 
-
+"""
+    GetType
+"""
 GetType(SE::SPECequilibrium{G,V}) where {G,V} = G
 
-function GetVolId end
+"""
+    GetVol
+"""
+function GetVol end
 GetVol(A::VectorPotential{T,N,V}) where {T,N,V} = V
 GetVol(SE::SPECequilibrium{G,V}) where {G,V} = V
 

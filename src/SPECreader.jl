@@ -6,6 +6,7 @@ Julia version of the SPEC-field-reader by Zhisong Qu https://github.com/zhisong/
 module SPECreader
 
     using HDF5
+    using LinearAlgebra
     # using ZernikePolynomials
     # using FastChebInterp
 
