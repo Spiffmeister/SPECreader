@@ -48,11 +48,27 @@ end
 
 """
     Cheby
-Chebyshev coefficients are provided by Rbc, Rbs, Zbc, Zbs
+
 """
+function Chebychev(s::T,Lrad::Integer) where T
+    Lrad += 1
+    cheb = zeros(T,(Lrad,3))
+    cheb[1,1] = cheb[2,2] = T(1)
+    cheb[2,1] = s
 
+    for i = 3:Lrad
+        cheb[i,1] = T(2)*s*cheb[i-1,1] - cheb[i-2,1]
+        cheb[i,2] = T(2)*cheb[i-1,1] + T(2)*s*cheb[i-1,2] - cheb(i-2,2)
+        cheb[i,3] = T(4)*cheb[i-1,2] + T(2)*s*cheb[i-1,3] - cheb(i-2,3)
+    end
 
-function Cheby()
+    for i = 2:Lrad
+        cheb[i,1] -= T(-1)^i
+    end
+
+    for i = 1:Lrad
+        cheb[i,:] ./= T(i+1)
+    end
 
 end
 
