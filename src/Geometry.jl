@@ -1,117 +1,35 @@
 
-"""
-    GetMetric
-Get the metric information at (s,θ,ξ)
-"""
-function GetMetric end
-function GetMetric(SE::SPECequilibrium{Cartesian,V}, s::T, θ::T, ξ::T, vᵢ::Integer) where {T,V}
+# """
+#     GetMetric
+# Get the metric information at (s,θ,ξ)
+# """
+# function GetMetric end
+# function GetMetric(s::TT, θ::TT, ξ::TT, SpecVol::SPECequilibrium{TT}, vᵢ::Int, side::Symbol) where TT
 
-    R_Derivative!(SE.M, s, θ, ξ, vᵢ, SE.Ri, SE.Params)
-
-    SE.M.x[1] = θ
-    SE.M.x[2] = ξ
-    SE.M.x[3] = SE.M.R₀₀
-
-    SE.M.gᵢⱼ[:, :] .= T(0)
-    SE.M.dgᵢⱼ[:, :, :] .= T(0)
-
-    SE.M.Jac = SE.M.Rᵢⱼ[1, 1]
-    SE.M.∇Jac = SE.M.Rᵢⱼ[1:3, 1]
-
-    SE.M.JacMat[1, 2] = T(1)
-    SE.M.JacMat[2, 3] = T(1)
-    SE.M.JacMat[3, 1:3] = SE.M.Rᵢⱼ[1, 1:3]
-
-    for i = 1:3
-        for j = 1:3
-            SE.M.gᵢⱼ[j, i] += SE.M.Rᵢⱼ[1, j] * SE.M.Rᵢⱼ[1, i]
-            for k = 1:3
-                SE.M.dgᵢⱼ[i, j, k] += SE.M.Rᵢⱼ[k, j] * SE.M.Rᵢⱼ[1, i] + SE.M.Rᵢⱼ[1, j] * SE.M.Rᵢⱼ[k, i]
-            end
-        end
-    end
-
-    SE.M.gᵢⱼ[2, 2] += T(1)
-    SE.M.gᵢⱼ[3, 3] += T(1)
-
-    return
-end
-
-"""
-    R_Derivative!
-Compute R and its derivatives in place
-"""
-function R_Derivative!(M::Metrics, s::T, θ::T, ξ::T, vᵢ::Integer, Coord::Coordinates, P::Parameters) where {T}
-
-    a = αᵢ(Coord.mᵢ, Coord.nᵢ, θ, ξ)
-    cosα = cos.(a)
-    sinα = sin.(a)
-
-    t = zeros(T, (4, P.mn))
-
-    alss = (1.0 - s) / 2.0
-    blss = (1.0 + s) / 2.0
-
-    t[1, :] = alss * Coord.Rbc[:, vᵢ] + blss * Coord.Rbc[:, vᵢ+1]
-    t[2, :] = -0.5 * Coord.Rbc[:, vᵢ] + 0.5 * Coord.Rbc[:, vᵢ+1]
-
-    if !P.StellaratorSymmetry
-        t[3, :] = alss * Coord.Rbs[:, vᵢ] + blss * Coord.Rbs[:, vᵢ+1]
-        t[4, :] = -0.5 * Coord.Rbs[:, vᵢ] + 0.5 * Coord.Rbs[:, vᵢ+1]
-    end
+#     if side == :inner
+#         r_sign = -1/2
+#         that_I = TT(lvol + 1)
+#     else
+#         r_sign = 1/2
+#         that_I = TT(lvol)
+#     end
 
 
-    M.R₀₀ = dot(t[1, :], cosα)                      #R coordinate
+#     α = mᵢ * θ - nᵢ * ζ
+#     sinterm, costerm = sincos(α)
 
-    M.Rᵢⱼ[1, 1] = dot(t[2, :], cosα)                      #dRds
-    M.Rᵢⱼ[1, 2] = dot(t[1, :], -Coord.mᵢ .* sinα)           #dRdu
-    M.Rᵢⱼ[1, 3] = dot(t[1, :], Coord.nᵢ .* sinα)            #dRdv
+#     dR[1,1,1] = Rbc * costerm
+#     dR[2,1,1] = Rbc * sinterm * -mᵢ
+#     dR[3,1,1] = Rbc * sinterm * nᵢ
 
-    M.Rᵢⱼ[2, 1] = T(0)                                  #d2Rds2
-    M.Rᵢⱼ[2, 2] = dot(t[2, :], -Coord.mᵢ .* sinα)           #d2Rdsdu
-    M.Rᵢⱼ[2, 3] = dot(t[2, :], Coord.nᵢ .* sinα)            #d2Rdsdv
+#     if SpecVol.CoordinateSingularity
+#         dR[1,1,1] = Rbc * mᵢ * costerm + 2 * (Rbc - Rbc)*costerm/2
+#     else
+#         dR[1,1,1] = dR[1,1,1] - sum(Rbc * costerm) * 
+#     end
 
-    M.Rᵢⱼ[3, 2] = dot(t[1, :], -Coord.mᵢ .^ 2 .* cosα)       #d2Rdu2
-    M.Rᵢⱼ[3, 3] = dot(t[1, :], Coord.mᵢ .* Coord.nᵢ .* cosα) #d2Rdudv
+# end
 
-    M.Rᵢⱼ[4, 3] = dot(t[1, :], -Coord.nᵢ .^ 2 .* cosα)       #d2Rdv2
-
-    if !P.StellaratorSymmetry
-        M.R₀₀ += dot(t[3, :], sinα)
-
-        M.Rᵢⱼ[1, 1] += dot(t[4, :], sinα)
-        M.Rᵢⱼ[1, 2] += dot(t[3, :], Coord.mᵢ .* cosα)
-        M.Rᵢⱼ[1, 3] += dot(t[3, :], -Coord.nᵢ .* cosα)
-
-        M.Rᵢⱼ[2, 1] += dot(t[3, :], sinα)
-        M.Rᵢⱼ[2, 2] += dot(t[3, :], sinα)
-        M.Rᵢⱼ[2, 3] += dot(t[3, :], sinα)
-
-        M.Rᵢⱼ[3, 2] += dot(t[3, :], sinα)
-        M.Rᵢⱼ[3, 3] += dot(t[3, :], sinα)
-        M.Rᵢⱼ[4, 3] += dot(t[3, :], sinα)
-    end
-
-
-    # Rᵢⱼᵀ = Rᵢⱼ
-    M.Rᵢⱼ[3, 1] = M.Rᵢⱼ[2, 2]
-    M.Rᵢⱼ[4, 1] = M.Rᵢⱼ[2, 3]
-    M.Rᵢⱼ[4, 2] = M.Rᵢⱼ[3, 3]
-
-end
-
-"""
-    Z_Derivative
-"""
-function Z_Derivative()
-
-    # cosa = cos.(αᵢ())
-    # sina = sin.(αᵢ())
-
-end
-
-
-@inline αᵢ(m, n, θ, ξ) = m * θ - n * ξ
 
 
 
@@ -120,7 +38,7 @@ end
 """
     get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA},lvol::Int) where {TT,ATT,TSA}
 
-Get the boundary.
+Get the boundary Fourier modes and return a named tuple with `Rbc`, `Zbs`, `m` and `n`.
 """
 function get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA}, lvol::Int) where {TT,ATT,TSA}
     if lvol == 1
@@ -154,15 +72,20 @@ function get_boundary(SpecVol::SPECEquilibrium; lvol=SpecVol.NumberofVolumes)
         m = [promote(m..., Int64(1))[1:end-1]...]
     end
 
-    BoundaryOut = Dict("Rbc" => Rbc, "Zbs" => Zbs, "m" => m, "n" => n)
-    return BoundaryOut
+    # BoundaryOut = Dict("Rbc" => Rbc, "Zbs" => Zbs, "m" => m, "n" => n)
+    boundary = (Rbc=SpecVol.Rbc[:, 2],
+            Zbs=SpecVol.Zbs[:, 2],
+            m=SpecVol.m,
+            n=SpecVol.n)
+    
+    return boundary
 end
 
 
 """
     get_axis(SpecVol)
 
-Get the magnetic axis.
+Get the Fourier modes of the magnetic axis of a SPEC equilibrium and output a named tuple `axis.R` and `axis.Z`.
 """
 function get_axis(SpecVol)
     return (R=SpecVol.Rbc[:, 1], Z=SpecVol.Zbs[:, 1])
@@ -208,13 +131,13 @@ function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Integer) where {T
         if SpecVol.CoordinateSingularity
 
             if m == 0
-                if SpecVol.Geometry == :cylindrical
+                if SpecVol.Geometry == Cylindrical
                     fj = s̄
                 else
                     fj = s̄^2
                 end
             else
-                if SpecVol.Geometry == :cylindrical
+                if SpecVol.Geometry == Cylindrical
                     fj = s̄^(m + 1)
                 else
                     fj = s̄^(m)
@@ -228,7 +151,7 @@ function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Integer) where {T
                 Romn = Rbs[i, 1] + (Rbs[i, 2] - Rbs[i, 1]) * fj
             end
 
-            if SpecVol.Geometry == :toroidal
+            if SpecVol.Geometry == Toroidal
                 Zomn = Zbs[i, 1] + (Zbs[i, 2] - Zbs[i, 1]) * fj
                 if !SpecVol.StellaratorSymmetric
                     Zemn = Zbc[i, 1] + (Zbc[i, 2] - Zbc[i, 1]) * fj
@@ -242,25 +165,25 @@ function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Integer) where {T
             if !SpecVol.StellaratorSymmetric
                 Romn = alss * Rbs[i, lvol] + blss * Rbs[i, lvol+1]
             else
-                Romn = TT(0)
+                Romn = zero(TT)
             end
 
-            if SpecVol.Geometry == :toroidal
+            if SpecVol.Geometry == Toroidal
                 Zomn = alss * Zbs[i, lvol] + blss * Zbs[i, lvol+1]
                 if !SpecVol.StellaratorSymmetric
                     Zemn = alss * Zbc[i, lvol] + blss * Zbc[i, lvol+1]
                 else
-                    Zemn = TT(0)
+                    Zemn = zero(TT)
                 end
             else
-                Zomn = TT(0)
-                Zemn = TT(0)
+                Zomn = zero(TT)
+                Zemn = zero(TT)
             end
 
         end
 
         R += Remn * costerm + Romn * sinterm
-        if SpecVol.Geometry == :toroidal
+        if SpecVol.Geometry == Toroidal
             Z += Zemn * costerm + Zomn * sinterm
         end
 
@@ -273,19 +196,21 @@ end
 
 
 
+
+
+
+
 """
     _coordinate_difference(q,X,ζ,SpecVol::SPECEquilibrium,lvol::Integer)
 
 Finding ``(s,\\theta,\\zeta)`` points for field line tracing. ``X = (R,Z)`` and ``q = (s,\\theta)``, ``\\zeta`` is the toroidal angle
 """
 function _coordinate_difference(q, X, ζ, SpecVol::SPECEquilibrium, lvol::Integer)
-    # X
     tmp = get_RZ(q[1], q[2], ζ, SpecVol, lvol)
     tmp = norm(X .- tmp)
     return tmp
 end
 function _coordinate_difference!(qout, q, X, ζ, SpecVol::SPECEquilibrium, lvol::Integer)
-    # X
     qout .= get_RZ(q[1], q[2], ζ, SpecVol, lvol)
     qout .= X .- qout
 end

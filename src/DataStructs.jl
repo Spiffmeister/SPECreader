@@ -3,6 +3,7 @@
 struct GeometryType{GT} end
 const Toroidal = GeometryType{:Toroidal}()
 const Cylindrical = GeometryType{:Cylindrical}()
+const Slab = GeometryType{:Slab}()
 
 
 
@@ -17,7 +18,7 @@ TODO: Extend to multi-volume
 struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
 
     Ntor::Int64
-    Geometry::Symbol
+    Geometry::GeometryType
     Mvol::Int64
     PoloidalResolution::Int64
     Nfp::Int64
@@ -105,14 +106,14 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
         Igeometry = read(fphysics["Igeometry"])[1]
 
         if Igeometry == 3
-            Geometry = :toroidal
+            Geometry = Toroidal
         elseif Igeometry == 2
-            Geometry = :cylindrical
+            Geometry = Cylindrical
         else
-            Geometry = :cartesian
+            Geometry = Slab
         end
 
-        (Ivolume[1] == 0) & (Geometry == :toroidal) ? ICoordinateSingularity = true : ICoordinateSingularity = false
+        (Ivolume[1] == 0) & (Geometry == Toroidal) ? ICoordinateSingularity = true : ICoordinateSingularity = false
 
 
 
@@ -199,8 +200,12 @@ function ReadBoundary(fname::String)
         m = [promote(m...,Int64(1))[1:end-1]...]
     end
 
-    BoundaryOut = Dict("Rac" => Rbc[:,1],"Rbc" => Rbc[:,2], "Zbs" => Zbs[:,2], "m" => m, "n" => n)
-    return BoundaryOut
+    boundary = (Rbc = Rbc[:,2],
+        Zbs = Zbs[:,2],
+        m = m,
+        n = n)
+    
+    return boundary
 end
 
 
@@ -214,6 +219,7 @@ function ReadPoincare(fname::String)
     f = h5open(fname)
 
     pdata = f["poincare"]
-    poinout = Dict("R" => read(pdata["R"]),"Z" => read(pdata["Z"]))
+    poinout = (R = read(pdata["R"]),Z = read(pdata["Z"]))
+
     return poinout
 end

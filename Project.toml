@@ -6,3 +6,13 @@ version = "0.1.0"
 [deps]
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NonlinearSolve = "8913a72c-1f9b-4ce2-8d82-65094dcecaec"
+Optim = "429524aa-4258-5aef-a3af-852621145aeb"
+StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
+
+[compat]
+HDF5 = "0.17.2"
+LinearAlgebra = "1.11.0"
+NonlinearSolve = "4.9.0"
+Optim = "1.12.0"
+StaticArrays = "1.9.13"
