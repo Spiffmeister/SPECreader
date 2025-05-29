@@ -8,6 +8,20 @@ const Slab = GeometryType{:Slab}()
 
 
 
+struct VectorPotential{ATT}
+    Ate :: ATT
+    Aze :: ATT
+    Ato :: ATT
+    Azo :: ATT
+end
+
+struct FourierSeries{TT}
+    R :: Vector{TT}
+    Z :: Vector{TT}
+end
+
+
+
 """
     SPECEquilibrium{TT, ATT<:Array{TT}, TSA}
 
@@ -40,8 +54,6 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
 
     Rpol::TT
     Rtor::TT
-
-    VolumeNumber::Vector{Int64}
 
     RadialResolution::Vector{Int64}
 
@@ -94,12 +106,6 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
 
 
         TT = eltype(Rbc)
-        TI = eltype(mn)
-
-
-        Ivolume = read(foutput["Ivolume"]) # Currently volume number
-        Ivolume = convert.(TI, Ivolume)
-
 
         # Physics parameters
 
@@ -113,12 +119,9 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
             Geometry = Slab
         end
 
-        (Ivolume[1] == 0) & (Geometry == Toroidal) ? ICoordinateSingularity = true : ICoordinateSingularity = false
-
-
+        Geometry == Toroidal ? ICoordinateSingularity = true : ICoordinateSingularity = false
 
         StellaratorSymmetric = convert(Bool, read(fphysics["Istellsym"])[1])
-
 
         PoloidalResolution = read(fphysics["Mpol"])[1] # TODO : why is this here
         Ntor = read(fphysics["Ntor"])[1]
@@ -145,10 +148,18 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
         catch
         end
 
-        RadialBasis = @MArray zeros(RadialResolution[1] + 1, PoloidalResolution + 1, 2)
+        RadialBasis = @MArray zeros(maximum(RadialResolution) + 1, PoloidalResolution + 1, 2)
 
 
         # n = Int.(n/Nfp)
+
+        # VPList = (1,RadialResolution...)
+        # VP = [VectorPotential(
+        #         Ate[i:VPList[i+1],:],
+        #         Aze[i:VPList[i+1],:],
+        #         Ato[i:VPList[i+1],:],
+        #         Azo[i:VPList[i+1],:]) for i in eachindex(VPList)]
+
 
 
         cache = zeros(TT, 3)
@@ -157,7 +168,7 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
             StellaratorSymmetric, ICoordinateSingularity,
             m, n,
             Rbc, Rbs, Zbc, Zbs, Rpol, Rtor,
-            Ivolume, RadialResolution,
+            RadialResolution,
             Ate, Aze, Ato, Azo,
             RadialBasis,
             cache,

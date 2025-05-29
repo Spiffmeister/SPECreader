@@ -100,20 +100,22 @@ end
 Chebyshev coefficients are provided by Rbc, Rbs, Zbc, Zbs
 """
 function get_chebychev!(chebychev,s::TT,SpecVol::SPECEquilibrium,lvol::Int,derivative=false) where TT
+    
+    RadialResolution = SpecVol.RadialResolution[lvol]
 
-    RadialResolution = SpecVol.RadialResolution[lvol] + 1 # Adjust for constant term
+    chebychev .= zero(TT)
 
     chebychev[1,1] = one(TT)
-    chebychev[1,2] = zero(TT)
+    # chebychev[1,2] = zero(TT)
     chebychev[2,1] = s
     chebychev[2,2] = one(TT)
 
     if derivative
-        chebychev[1,3] = zero(TT)
-        chebychev[2,3] = zero(TT)
+        # chebychev[1,3] = zero(TT)
+        # chebychev[2,3] = zero(TT)
     end
 
-    for l in 3:RadialResolution
+    for l in 3:RadialResolution+1
         chebychev[l,1] = 2 * s * chebychev[l-1,1] - chebychev[l-2,1]
         chebychev[l,2] = 2 * chebychev[l-1,1] + 2 * s * chebychev[l-1,2] - chebychev[l-2,2]
         if derivative
@@ -121,11 +123,11 @@ function get_chebychev!(chebychev,s::TT,SpecVol::SPECEquilibrium,lvol::Int,deriv
         end
     end
 
-    for l in 2:RadialResolution
-        chebychev[l,1] = chebychev[l,1] - (-1)^l
+    for l in 2:RadialResolution+1
+        chebychev[l,1] = chebychev[l,1] - (-1)^TT(l-1)
     end
 
-    for l in 1:RadialResolution
+    for l in 1:RadialResolution+1
         chebychev[l,1] = chebychev[l,1] / TT(l)
         chebychev[l,2] = chebychev[l,2] / TT(l)
     end

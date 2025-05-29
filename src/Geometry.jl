@@ -100,7 +100,7 @@ end
 
 Get the ``(R,Z)`` coordinates from ``(s,\\theta,\\zeta)\\in[-1,1]\\times[0,2\\pi)\\times[0,2\\pi)`` logical coordinates.
 """
-function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Integer) where {TT}
+function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Int=1) where {TT}
 
 
     Rbc = SpecVol.Rbc
@@ -128,7 +128,10 @@ function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Integer) where {T
         Zomn = zero(TT)
         Zemn = zero(TT)
 
-        if SpecVol.CoordinateSingularity
+        
+        (lvol == 1) ? CoordinateSingularity = SpecVol.CoordinateSingularity : CoordinateSingularity = false
+
+        if CoordinateSingularity
 
             if m == 0
                 if SpecVol.Geometry == Cylindrical
