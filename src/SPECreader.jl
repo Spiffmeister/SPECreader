@@ -5,19 +5,24 @@ Julia version of the SPEC-field-reader by Zhisong Qu https://github.com/zhisong/
 """
 module SPECreader
 
-    using HDF5
-    using LinearAlgebra
-    # using ZernikePolynomials
-    # using FastChebInterp
+using HDF5
+using LinearAlgebra
+using StaticArrays
+using NonlinearSolve
+using Optim
 
-    # Data Structures
-    include("DataStructs.jl")
-    # reading in HDF5
-    include("IO.jl")
-    # Metrics
-    include("Geometry.jl")
-    # Fields
+# Data Structures
+include("DataStructs.jl")
+# reading in HDF5
+# include("IO.jl")
+# Metrics
+include("Geometry.jl")
+# Fields
+# Basis functions for SPEC geometry
+include("BasisFunctions.jl")
 
 
-    export read_spec
+export SPECEquilibrium
+
+
 end # module temp
