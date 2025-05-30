@@ -1,8 +1,7 @@
 
 push!(LOAD_PATH,"../src/")
 
-using Documenter, Literate
-using Pkg; Pkg.activate(".."); using SPECreader
+using Documenter, Literate, SPECreader
 
 
 makedocs(sitename="SPECreader",
