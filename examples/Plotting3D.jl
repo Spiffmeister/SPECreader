@@ -1,18 +1,22 @@
 using Pkg
 Pkg.activate(".")
-using SPECEquilibrium
+using SPECreader
+using LinearAlgebra
 using GLMakie, GeometryBasics
 
 
+
+
+speceq = SPECEquilibrium("testing/data/G3V01L0Fi.002.sp.h5")
 
 
 
 θ_rng = range(0.0,2π,101)
 ζ_rng = range(0.0,2π,1001)
 
-boundary_points_x = [Tor(θ,ζ)[1]*cos(ζ) for θ in θ_rng, ζ in ζ_rng]
-boundary_points_z = [Tor(θ,ζ)[2] for θ in θ_rng, ζ in ζ_rng]
-boundary_points_y = [norm(Tor(θ,ζ))*sin(ζ) for θ in θ_rng, ζ in ζ_rng]
+boundary_points_x = [get_RZ(1.0,θ,ζ,speceq,1)[1]*cos(ζ) for θ in θ_rng, ζ in ζ_rng]
+boundary_points_z = [get_RZ(1.0,θ,ζ,speceq,1)[2] for θ in θ_rng, ζ in ζ_rng]
+boundary_points_y = [norm(get_RZ(1.0,θ,ζ,speceq,1))*sin(ζ) for θ in θ_rng, ζ in ζ_rng]
 
 # Convert to Point3fs
 points = vec([Point3f(x,y,z) for (x,y,z) in zip(boundary_points_x,boundary_points_y,boundary_points_z)])
@@ -23,7 +27,7 @@ _faces = decompose(QuadFace{GLIndex}, Tessellation(Rect(0, 0, 1, 1), size(bounda
 # Compute the normals for the points
 _normals = normalize.(points)
 
-modB = [norm(readspec.get_Bfield(1.0,θ,ζ,speceq)) for θ in θ_rng, ζ in ζ_rng]
+modB = [norm(get_Bfield(1.0,θ,ζ,speceq)) for θ in θ_rng, ζ in ζ_rng]
 
 # Assign the colours to the faces
 _color = FaceView(modB[:], _faces)

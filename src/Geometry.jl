@@ -35,48 +35,35 @@
 
 
 
-"""
-    get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA},lvol::Int) where {TT,ATT,TSA}
+# """
+#     get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA},lvol::Int) where {TT,ATT,TSA}
 
-Get the boundary Fourier modes and return a named tuple with `Rbc`, `Zbs`, `m` and `n`.
+# Get the boundary Fourier modes and return a named tuple with `Rbc`, `Zbs`, `m` and `n`.
+# """
+# function get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA}, lvol::Int) where {TT,ATT,TSA}
+#     if lvol == 1
+#         boundary = (Rbc=SpecVol.Rbc[:, 2],
+#             Zbs=SpecVol.Zbs[:, 2],
+#             m=SpecVol.m,
+#             n=SpecVol.n)
+#     else
+#         error("lvol>1 not implemented yet")
+#     end
+#     return boundary
+# end
 """
-function get_boundary(SpecVol::SPECEquilibrium{TT,ATT,TSA}, lvol::Int) where {TT,ATT,TSA}
-    if lvol == 1
-        boundary = (Rbc=SpecVol.Rbc[:, 2],
-            Zbs=SpecVol.Zbs[:, 2],
-            m=SpecVol.m,
-            n=SpecVol.n)
-    else
-        error("lvol>1 not implemented yet")
-    end
-    return boundary
-end
-"""
-    get_boundary(SpecVol::SPECEquilibrium;lvol=SpecVol.NumberofVolumes)
+    get_boundary(SpecVol::SPECEquilibrium, lvol=SpecVol.NumberofVolumes)
 
 Pull the outer boundary from a spec equlibrium data structure.
-
-TODO: Add functionality to `lvol` so that we can pull the interface positions.
 """
-function get_boundary(SpecVol::SPECEquilibrium; lvol=SpecVol.NumberofVolumes)
-    Rbc = SpecVol.Rbc[:, 2]
-    Zbs = SpecVol.Zbs[:, 2]
+function get_boundary(SpecVol::SPECEquilibrium, lvol::Int=SpecVol.NumberofVolumes)
+    Rbc = SpecVol.Rbc[:, lvol+1]
+    Zbs = SpecVol.Zbs[:, lvol+1]
 
-    PoloidalResolution = SpecVol.PoloidalResolution
-    Ntor = SpecVol.Ntor
-
-    m = vcat([collect(-PoloidalResolution:PoloidalResolution) for i in 1:Ntor+1]...)[PoloidalResolution+1:end]
-    n = vcat(zeros(Int, PoloidalResolution + 1), repeat(1:Ntor, inner=2PoloidalResolution + 1))
-
-    if eltype(m) == Int32
-        m = [promote(m..., Int64(1))[1:end-1]...]
-    end
-
-    # BoundaryOut = Dict("Rbc" => Rbc, "Zbs" => Zbs, "m" => m, "n" => n)
-    boundary = (Rbc=SpecVol.Rbc[:, 2],
-            Zbs=SpecVol.Zbs[:, 2],
-            m=SpecVol.m,
-            n=SpecVol.n)
+    boundary = (Rbc=Rbc,
+            Zbs=Zbs,
+            m=m,
+            n=n)
     
     return boundary
 end
@@ -98,7 +85,7 @@ end
 """
     get_RZ(s::TT,θ,ζ,SpecVol::SPECEquilibrium,lvol::Integer) where TT
 
-Get the ``(R,Z)`` coordinates from ``(s,\\theta,\\zeta)\\in[-1,1]\\times[0,2\\pi)\\times[0,2\\pi)`` logical coordinates.
+Get the ``(R,Z)`` coordinates from ``(s,\\theta,\\zeta,l_{vol})\\in[-1,1]\\times[0,2\\pi)\\times[0,2\\pi)\\times[1,N_{vol}]`` logical coordinates.
 """
 function get_RZ(s::TT, θ, ζ, SpecVol::SPECEquilibrium, lvol::Int=1) where {TT}
 
@@ -224,7 +211,7 @@ end
     find_sθζ(X,ζ,SpecVol::SPECEquilibrium,lvol::Integer,max_attempts=100)
 
 Find the ``(s,\\theta,\\zeta)`` point corresponding to a given ``(R,Z)`` point for a fixed ``\\zeta``.
-It is possible that the starting location is bad and the located point is outside of the computational domain. If we generate random initial conditions until it ends up inside the domain.
+It is possible that the starting location is bad and the located point is outside of the computational domain, in which case we generate random initial conditions until it ends up inside the domain. The point is first approached using the `optimize` function from [Optim.jl](https://julianlsolvers.github.io/Optim.jl/stable/), then [NonlinearSolve](https://docs.sciml.ai/NonlinearSolve/stable/) is used to hopefully finish pushing the point as close as possible.
 """
 function find_sθζ(X, ζ, SpecVol::SPECEquilibrium, lvol::Integer, max_attempts=100, tol=1e-12)
 

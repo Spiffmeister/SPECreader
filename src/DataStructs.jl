@@ -25,9 +25,14 @@ end
 """
     SPECEquilibrium{TT, ATT<:Array{TT}, TSA}
 
-All components needed to reconstruct a SPEC equilibrium. At the moment only working for single volume.
+All components needed to reconstruct a SPEC equilibrium.
 
-TODO: Extend to multi-volume
+```julia
+eqname = "testing/data/G3V01L0Fi.002.sp.h5"
+speceq = SPECEquilibrium(eqname)
+```
+
+
 """
 struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
 
@@ -77,8 +82,7 @@ struct SPECEquilibrium{TT,ATT<:Array{TT},TSA}
     cache_metric::SArray{Tuple{3,3,3},TT}
 
 
-
-    function SPECEquilibrium(eqname; mode=:normal)
+    function SPECEquilibrium(eqname)
 
         f = h5open(eqname)
 
@@ -183,13 +187,8 @@ end
 """
     ReadBoundary(fname::String)
 
-Outputs the necessary data to reconstruct a SPEC boundary. This can be provided to `FaADE.jl` through the `FaADE.Grid.Torus` function
-```jl
-> bd = ReadBoundary("fname")
-> Tor = FaADE.Grid.Torus(bd["Rbc"],bd["Zbs"],bd["m"],bd["n"])
-```
+Outputs the necessary data to reconstruct a SPEC boundary.
 """
-# function ReadBoundary(f::HDF5.File)
 function ReadBoundary(fname::String)
 
     f = h5open(fname)
@@ -223,7 +222,7 @@ end
 """
     ReadPoincare(fname::String)
 
-Read the Poincar\'e section for a given SPEC equilibrium output.
+Read the Poincaré section for a given SPEC equilibrium output.
 """
 function ReadPoincare(fname::String)
 

@@ -85,9 +85,9 @@ end
 
 
 """
-  field_line!(ẋ, t, x, SpecVol::SPECEquilibrium,lvol::Int=1)
+    field_line!(ẋ, t, x, SpecVol::SPECEquilibrium,lvol::Int=1)
 
-In place field line tracing function given a `SpecVol`
+In place field line tracing function given a `lvol`
 
 TODO: Implement for multi-volume spec equilibria
 """

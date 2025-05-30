@@ -20,12 +20,10 @@ speceq = SPECEquilibrium("testing/data/G1V02L0Fi.001.sp.h5")
 
 
 
-
-
 ## Plotting
 
 
-For plotting one could use either [Plots](https://docs.juliaplots.org/stable/) or [Makie](https://docs.makie.org/stable/). In the examples folder for plotting a mesh in 3D.
+For plotting one could use either [Plots](https://docs.juliaplots.org/stable/) or [Makie](https://docs.makie.org/stable/). The examples folder contains a script for plotting a mesh in 3D using Makie.
 
 
 

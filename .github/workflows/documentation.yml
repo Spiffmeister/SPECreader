@@ -1,0 +1,32 @@
+name: Documentation
+
+on:
+  push:
+    branches:
+      - master # update to match your development branch (master, main, dev, trunk, ...)
+    tags: '*'
+  pull_request:
+
+jobs:
+  build:
+    permissions:
+      contents: write
+      pull-requests: read
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1.11.5'
+      - uses: julia-actions/cache@v2
+      - name: Install dependencies
+        shell: julia --color=yes --project=docs {0}
+        run: |
+          using Pkg
+          Pkg.develop(PackageSpec(path=pwd()))
+          Pkg.instantiate()
+      - name: Build and deploy
+        run: julia --project=docs/ docs/make_online.jl
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # If authenticating with GitHub Actions token
+          DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }} # If authenticating with SSH deploy key
