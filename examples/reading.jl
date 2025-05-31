@@ -1,9 +1,5 @@
 # # An example of reading in a file
-# 
-#
 
-using Pkg
-Pkg.activate(".")
 using SPECreader
 
 # for this short example we'll read and plot
