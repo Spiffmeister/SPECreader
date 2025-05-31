@@ -1,7 +1,13 @@
 # SPECreader
 
+<img alt="Static Badge" src="https://img.shields.io/badge/docs-dev-blue?label=docs&link=https%3A%2F%2Fspiffmeister.github.io%2FSPECreader%2Fdev%2F">
+
 This package is for reading and manipulating output from the [Stepped Pressure Equilibrium Code](https://github.com/PrincetonUniversity/SPEC) (SPEC).
 
+Currently the package is registered, so to add please use:
+```julia
+] add https://github.com/Spiffmeister/SPECreader.git
+```
 
 
 ## Example
