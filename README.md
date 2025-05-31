@@ -1,6 +1,6 @@
 # SPECreader
 
-<img alt="Static Badge" src="https://img.shields.io/badge/docs-dev-blue?label=docs&link=https%3A%2F%2Fspiffmeister.github.io%2FSPECreader%2Fdev%2F">
+[![Static Badge](https://img.shields.io/badge/docs-stable-blue)](https://spiffmeister.github.io/SPECreader/dev/index.html)
 
 This package is for reading and manipulating output from the [Stepped Pressure Equilibrium Code](https://github.com/PrincetonUniversity/SPEC) (SPEC).
 
