@@ -62,8 +62,8 @@ function get_boundary(SpecVol::SPECEquilibrium, lvol::Int=SpecVol.NumberofVolume
 
     boundary = (Rbc=Rbc,
             Zbs=Zbs,
-            m=m,
-            n=n)
+            m=SpecVol.m,
+            n=SpecVol.n)
     
     return boundary
 end
